@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import { insertUsuarioSchema, loginUsuarioSchema, updateUsuarioSchema } from "@shared/schema";
 import { evaluateAndCreateNotificationsForUserOnDate } from "./notifications";
 import { sendEmailNotification } from "./email";
+import fhirRouter from './fhir/routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Registrar o actualizar actividad física
@@ -323,6 +324,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ success: false, message: 'Error listando usuarios' });
     }
   });
+
+  // Registrar rutas FHIR (POC de actividad -> Observation)
+  app.use('/fhir', fhirRouter);
+
 
   // Enviar notificación por correo (admin)
   app.post('/api/admin/send-email-notification', async (req, res) => {
