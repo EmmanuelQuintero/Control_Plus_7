@@ -111,37 +111,54 @@ export default function Nutrition() {
       toast({ title: 'Comida registrada', description: '¡Tu registro fue guardado!' });
       setMealType('');
       setCalories('');
+      try {
+        // Si la fecha registrada es hoy, agregar al listado local
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        const todayYMD = `${y}-${m}-${d}`;
+        if (selectedDate === todayYMD) {
+          const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+          setTodaysMeals((prev) => [...prev, { type: comida, time, calories: calNum, items: [] }]);
+        }
+      } catch {}
     } catch (e) {
       toast({ title: 'Error', description: 'No se pudo registrar la comida.', variant: 'destructive' });
     }
   };
 
-  const todaysMeals = [
+  const [todaysMeals, setTodaysMeals] = useState(() => [
     {
-      type: "Breakfast",
-      time: "8:30 AM",
+      type: "Desayuno",
+      time: "8:30",
       calories: 450,
-      items: ["Oatmeal with berries", "Greek yogurt", "Orange juice"],
+      items: ["Avena con frutos rojos", "Yogurt griego", "Jugo de naranja"],
     },
     {
-      type: "Lunch",
-      time: "12:45 PM",
+      type: "Almuerzo",
+      time: "12:45",
       calories: 620,
-      items: ["Grilled chicken salad", "Whole grain bread", "Apple"],
+      items: ["Ensalada de pollo a la parrilla", "Pan integral", "Manzana"],
     },
     {
-      type: "Snack",
-      time: "3:30 PM",
+      type: "Merienda",
+      time: "15:30",
       calories: 180,
-      items: ["Protein bar", "Almonds"],
+      items: ["Barra de proteína", "Almendras"],
     },
-  ];
+  ] as Array<{ type: string; time: string; calories: number; items: string[] }>);
+
+  // Calcular calorías totales del día y progreso contra la meta
+  const totalCalories = todaysMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
+  const progressPercent = caloriesGoal > 0 ? Math.round((totalCalories / caloriesGoal) * 100) : 0;
+  const progressColor: "primary" | "success" | "nutrition" = progressPercent >= 100 ? "success" : progressPercent >= 75 ? "nutrition" : "primary";
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Nutrition Tracking</h1>
-        <p className="text-muted-foreground">Monitor your daily food intake</p>
+        <h1 className="text-3xl font-bold">Nutrición</h1>
+        <p className="text-muted-foreground">Monitorea tu ingesta diaria de alimentos</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -156,7 +173,7 @@ export default function Nutrition() {
                   <Flame className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">1,847</p>
+                  <p className="text-3xl font-bold">{totalCalories.toLocaleString()}</p>
                   <div className="flex items-center gap-2 mt-1">
                     {!isEditingGoal ? (
                       <>
@@ -207,67 +224,87 @@ export default function Nutrition() {
           </CardContent>
         </Card>
         <StatCard
-          title="Meals Logged"
-          value="3"
+          title="Comidas registradas"
+          value={todaysMeals.length.toString()}
           icon={Apple}
-          subtitle="Today"
+          subtitle="Hoy"
           color="success"
         />
         <StatCard
-          title="Target Met"
-          value="92%"
+          title="Meta alcanzada"
+          value={`${progressPercent}%`}
           icon={Target}
-          subtitle="This week"
-          color="primary"
+          subtitle={`${totalCalories.toLocaleString()} / ${caloriesGoal.toLocaleString()} kcal`}
+          color={progressColor}
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card data-testid="card-log-meal">
           <CardHeader>
-            <CardTitle>Log Meal</CardTitle>
+            <CardTitle>Registrar comida</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="mealType">Meal Type</Label>
+              <Label htmlFor="mealType">Tipo de comida</Label>
               <Select value={mealType} onValueChange={setMealType}>
                 <SelectTrigger id="mealType" data-testid="select-meal-type">
-                  <SelectValue placeholder="Select meal type" />
+                  <SelectValue placeholder="Selecciona tipo de comida" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="breakfast">Breakfast</SelectItem>
-                  <SelectItem value="lunch">Lunch</SelectItem>
-                  <SelectItem value="dinner">Dinner</SelectItem>
-                  <SelectItem value="snack">Snack</SelectItem>
+                  <SelectItem value="breakfast">Desayuno</SelectItem>
+                  <SelectItem value="lunch">Almuerzo</SelectItem>
+                  <SelectItem value="dinner">Cena</SelectItem>
+                  <SelectItem value="snack">Merienda</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="calories">Calories</Label>
+              <Label htmlFor="calories">Calorías</Label>
               <Input
                 id="calories"
                 type="number"
-                placeholder="Enter calories"
+                placeholder="Ingresa calorías"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
                 data-testid="input-calories"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Fecha</Label>
               <Input id="date" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
             </div>
             <Button onClick={handleLogMeal} className="w-full" data-testid="button-log-meal">
-              Log Meal
+              Registrar comida
             </Button>
           </CardContent>
         </Card>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Today's Meals</h3>
-          {todaysMeals.map((meal, idx) => (
-            <MealCard key={idx} {...meal} />
-          ))}
+          <h3 className="text-lg font-semibold">Comidas de hoy</h3>
+          <div className="space-y-3">
+            {todaysMeals.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No hay registros</div>
+            ) : (
+              todaysMeals.map((meal, idx) => (
+                <div key={idx} className="flex items-stretch gap-4">
+                  <div className="flex-1">
+                    <MealCard type={meal.type} calories={meal.calories} compact />
+                  </div>
+                  <div className="w-40">
+                    <Card className="h-full hover-elevate">
+                      <CardContent className="p-4 flex items-center justify-center">
+                        <div className="text-center">
+                          <h4 className="font-semibold">{meal.time ? meal.time : "—"}</h4>
+                          <div className="text-xs text-muted-foreground">Hora registrada</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

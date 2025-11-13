@@ -3,13 +3,13 @@ import { MealCard } from "../meal-card";
 export default function MealCardExample() {
   return (
     <MealCard
-      type="Breakfast"
-      time="8:30 AM"
+      type="Desayuno"
+      time="8:30"
       calories={450}
       items={[
-        "Oatmeal with berries",
-        "Greek yogurt",
-        "Orange juice",
+        "Avena con frutos rojos",
+        "Yogurt griego",
+        "Jugo de naranja",
       ]}
     />
   );
